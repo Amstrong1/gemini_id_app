@@ -1,11 +1,13 @@
 import 'package:go_router/go_router.dart';
 import 'package:id_app/presentation/screens/auth/forgot_password_screen.dart';
+import 'package:id_app/presentation/screens/history_screen.dart';
 import 'package:id_app/presentation/screens/home_screen.dart';
 import 'package:id_app/presentation/screens/auth/login_screen.dart';
 import 'package:id_app/presentation/screens/auth/new_password_screen.dart';
 import 'package:id_app/presentation/screens/auth/register_screen.dart';
 import 'package:id_app/presentation/screens/identification/agency_selection.dart';
 import 'package:id_app/presentation/screens/identification/tracking_code.dart';
+import 'package:id_app/presentation/screens/identification/upload_doc.dart';
 import 'package:id_app/presentation/screens/identification/verification_method.dart';
 import 'package:id_app/presentation/screens/splash_screen.dart';
 import 'package:id_app/presentation/screens/start_screen.dart';
@@ -43,6 +45,14 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/verification-method',
       builder: (context, state) => const VerificationMethodScreen(),
+    ),
+    GoRoute(
+      path: '/upload-doc',
+      builder: (context, state) => UploadDocumentScreen(),
+    ),
+    GoRoute(
+      path: '/history',
+      builder: (context, state) => VerificationHistoryScreen(),
     ),
   ],
 );

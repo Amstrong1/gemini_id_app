@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class VerificationMethodScreen extends StatefulWidget {
   const VerificationMethodScreen({super.key});
@@ -16,95 +17,110 @@ class _VerificationMethodScreenState extends State<VerificationMethodScreen> {
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: 24),
-            // Logo and App Name
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Image.asset('assets/images/logo.png', height: 60),
-                const SizedBox(height: 8),
-                const Text(
-                  "Je M’identifie",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-              ],
+        child: SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: MediaQuery.of(context).size.height,
             ),
-            const SizedBox(height: 24),
-
-            // Success Message
-            const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  "Identification effectué avec succès",
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-                ),
-                SizedBox(width: 4),
-                Icon(Icons.check_circle, color: Colors.teal, size: 20),
-              ],
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              "Choisissez le moyen par lequel vous\nsouhaitez vérifier votre identité",
-              style: TextStyle(fontSize: 14),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-
-            // Method 1 - Video Identification
-            _buildMethodOption(
-              icon: Icons.movie_creation_outlined,
-              title: "Vidéo-identification",
-              value: "video",
-            ),
-            const SizedBox(height: 12),
-
-            // Method 2 - In-Person Identification
-            _buildMethodOption(
-              icon: Icons.apartment,
-              title: "Identification en agence",
-              value: "in-person",
-            ),
-            const SizedBox(height: 24),
-
-            // Continue Button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: SizedBox(
-                width: 200,
-                height: 50,
-                child: ElevatedButton(
-                  onPressed: () {
-                    // TODO: Handle navigation based on selectedMethod
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF0EA5E9),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+            child: IntrinsicHeight(
+              child: Column(
+                children: [
+                  const SizedBox(height: 24),
+                  // Logo and App Name
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset('assets/images/logo.png', height: 60),
+                      const SizedBox(height: 8),
+                      const Text(
+                        "Je M’identifie",
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
-                  child: const Row(
+                  const SizedBox(height: 24),
+
+                  // Success Message
+                  const Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "Continuer",
+                        "Identification effectué avec succès",
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: Colors.white,
                         ),
                       ),
-                      SizedBox(width: 8),
-                      Icon(Icons.arrow_forward, color: Colors.white),
+                      SizedBox(width: 4),
+                      Icon(Icons.check_circle, color: Colors.teal, size: 20),
                     ],
                   ),
-                ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    "Choisissez le moyen par lequel vous\nsouhaitez vérifier votre identité",
+                    style: TextStyle(fontSize: 14),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Method 1 - Video Identification
+                  _buildMethodOption(
+                    icon: Icons.movie_creation_outlined,
+                    title: "Vidéo-identification",
+                    value: "video",
+                  ),
+                  const SizedBox(height: 12),
+
+                  // Method 2 - In-Person Identification
+                  _buildMethodOption(
+                    icon: Icons.apartment,
+                    title: "Identification en agence",
+                    value: "in-person",
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Continue Button
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: SizedBox(
+                      width: 200,
+                      height: 50,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          context.push('/upload-doc');
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0EA5E9),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              "Continuer",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.white,
+                              ),
+                            ),
+                            SizedBox(width: 8),
+                            Icon(Icons.arrow_forward, color: Colors.white),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                ],
               ),
             ),
-            const SizedBox(height: 24),
-          ],
+          ),
         ),
       ),
     );

@@ -126,7 +126,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     if (_selectedIndex == 0) {
                       context.push('/agency-selection');
                     } else if (_selectedIndex == 1) {
-                      // Navigator.pushNamed(context, '/history');
+                      context.push('/history');
                     }
                   },
                 ),
