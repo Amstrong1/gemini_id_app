@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:id_app/data/services/signaling.dart';
+import 'package:id_app/presentation/screens/identification/video_call_screen.dart';
 
 class VerificationMethodScreen extends StatefulWidget {
-  const VerificationMethodScreen({super.key});
+  final String selfCallerId;
+  const VerificationMethodScreen({super.key, required this.selfCallerId});
 
   @override
   State<VerificationMethodScreen> createState() =>
@@ -10,10 +13,81 @@ class VerificationMethodScreen extends StatefulWidget {
 }
 
 class _VerificationMethodScreenState extends State<VerificationMethodScreen> {
+  // signalling server url
+  final String websocketUrl = "http://192.168.205.241:8080";
+
   String selectedMethod = "video";
+
+  dynamic incomingSDPOffer;
+  final remoteCallerIdTextEditingController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+
+    // listen for incoming video call
+    SignallingService.instance.socket?.on("newCall", (data) {
+      if (mounted) {
+        // set SDP Offer of incoming call
+        setState(() => incomingSDPOffer = data);
+      }
+    });
+  }
+
+  // join Call
+  void _joinCall({
+    required String callerId,
+    required String calleeId,
+    dynamic offer,
+  }) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            CallScreen(callerId: callerId, calleeId: calleeId, offer: offer),
+      ),
+    );
+  }
+
+  void _handleVideoCall() {
+    final calleeId = remoteCallerIdTextEditingController.text.trim();
+
+    if (calleeId.isEmpty) {
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text("ID requis"),
+          content: const Text(
+            "Veuillez entrer l'identifiant de votre interlocuteur.",
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
+      return;
+    }
+
+    _joinCall(callerId: widget.selfCallerId, calleeId: calleeId);
+  }
+
+  @override
+  void dispose() {
+    remoteCallerIdTextEditingController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+
+    // init signalling service
+    SignallingService.instance.init(
+      websocketUrl: websocketUrl,
+      selfCallerID: widget.selfCallerId,
+    );
     return Scaffold(
       backgroundColor: Colors.white,
       body: SafeArea(
@@ -82,6 +156,22 @@ class _VerificationMethodScreenState extends State<VerificationMethodScreen> {
                   ),
                   const SizedBox(height: 24),
 
+                  // Champ Remote Caller ID (seulement si méthode vidéo sélectionnée)
+                  if (selectedMethod == "video")
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: TextField(
+                        controller: remoteCallerIdTextEditingController,
+                        decoration: InputDecoration(
+                          labelText: "Identifiant de l'interlocuteur",
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                      ),
+                    ),
+                  if (selectedMethod == "video") const SizedBox(height: 16),
+
                   // Continue Button
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -90,7 +180,11 @@ class _VerificationMethodScreenState extends State<VerificationMethodScreen> {
                       height: 50,
                       child: ElevatedButton(
                         onPressed: () {
-                          context.push('/upload-doc');
+                          if (selectedMethod == "video") {
+                            _handleVideoCall();
+                          } else if (selectedMethod == "in-person") {
+                            context.push('/in-person-verification');
+                          }
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF0EA5E9),
