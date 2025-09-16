@@ -4,19 +4,18 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:http/http.dart' as http;
 import 'package:id_app/app_config.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-class LoginScreen extends StatefulWidget {
-  LoginScreen({super.key});
+class RequestCodeScreen extends StatefulWidget {
+  RequestCodeScreen({super.key});
 
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
   @override
-  State<LoginScreen> createState() => _LoginButtonState();
+  State<RequestCodeScreen> createState() => _RequestCodeButtonState();
 }
 
-class _LoginButtonState extends State<LoginScreen> {
+class _RequestCodeButtonState extends State<RequestCodeScreen> {
   bool isLoading = false;
 
   @override
@@ -67,7 +66,7 @@ class _LoginButtonState extends State<LoginScreen> {
                     // Title
                     Center(
                       child: Text(
-                        'Connexion',
+                        'Mot de passe oublié',
                         style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.w700,
@@ -78,7 +77,7 @@ class _LoginButtonState extends State<LoginScreen> {
                     const SizedBox(height: 8),
 
                     const Text(
-                      'Connecter vous pour accéder à votre compte',
+                      'Entrez votre email pour recevoir un code de réinitialisation',
                       style: TextStyle(fontSize: 16, color: Colors.grey),
                     ),
 
@@ -94,36 +93,7 @@ class _LoginButtonState extends State<LoginScreen> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Password
-                    TextField(
-                      obscureText: true,
-                      decoration: inputDecoration.copyWith(
-                        hintText: 'Mot de passe',
-                        prefixIcon: const Icon(Icons.lock_outline),
-                      ),
-                      controller: widget.passwordController,
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    // Forgot password
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: TextButton(
-                        onPressed: () {
-                          context.push('/request-reset-password-link');
-                        },
-                        style: TextButton.styleFrom(padding: EdgeInsets.zero),
-                        child: Text(
-                          "Mot de passe oublié?",
-                          style: TextStyle(color: AppConfig.primaryColor),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    // Login Button
+                    // RequestCode Button
                     SizedBox(
                       width: 200,
                       height: 50,
@@ -135,18 +105,17 @@ class _LoginButtonState extends State<LoginScreen> {
                           ),
                         ),
                         onPressed: () {
-                          // Handle login logic here
-                          loginUser(
+                          // Handle RequestCode logic here
+                          requestCodeUser(
                             context: context,
                             email: widget.emailController.text.trim(),
-                            password: widget.passwordController.text.trim(),
                           );
                         },
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              isLoading ? 'Chargement...' : 'Se connecter',
+                              isLoading ? 'Chargement...' : 'Envoyer',
                               style: const TextStyle(
                                 fontSize: 18,
                                 color: Colors.white,
@@ -165,26 +134,6 @@ class _LoginButtonState extends State<LoginScreen> {
                     ),
 
                     const SizedBox(height: 60),
-
-                    // Bottom link
-                    Center(
-                      child: Wrap(
-                        children: [
-                          const Text("Pas encore de compte? "),
-                          GestureDetector(
-                            onTap: () {
-                              context.push('/register');
-                            },
-                            child: Text(
-                              "S’inscrire",
-                              style: TextStyle(color: AppConfig.primaryColor),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 20),
                   ],
                 ),
               ),
@@ -195,10 +144,9 @@ class _LoginButtonState extends State<LoginScreen> {
     );
   }
 
-  void loginUser({
+  void requestCodeUser({
     required BuildContext context,
     required String email,
-    required String password,
   }) async {
     // Handle registration logic here
 
@@ -206,7 +154,7 @@ class _LoginButtonState extends State<LoginScreen> {
       isLoading = true;
     });
 
-    if (email.isEmpty || password.isEmpty) {
+    if (email.isEmpty) {
       _showMessage(context, "Veuillez remplir tous les champs.");
       setState(() {
         isLoading = false;
@@ -214,28 +162,23 @@ class _LoginButtonState extends State<LoginScreen> {
       return;
     }
 
-    String apiUrl = "${AppConfig.baseUrl}auth/login";
+    String apiUrl = "${AppConfig.baseUrl}auth/forgot-password";
+
     try {
       final response = await http.post(
         Uri.parse(apiUrl),
         headers: {"Content-Type": "application/json"},
-        body: jsonEncode({"email": email, "password": password}),
+        body: jsonEncode({"email": email}),
       );
 
       final data = jsonDecode(response.body);
 
       if (response.statusCode == 200) {
-        if (data["data"]["token"] != null && data["data"]["user"] != null) {
-          // Sauvegarde dans SharedPreferences
-          SharedPreferences prefs = await SharedPreferences.getInstance();
-          await prefs.setString("token", data["data"]["token"]);
-          await prefs.setString("user", data["data"]["user"].toString());
+        String message = data["data"]["message"];
 
-          // Redirection vers une page d'accueil par exemple
-          context.go('/home');
-        } else {
-          _showMessage(context, "Réponse invalide du serveur.");
-        }
+        _showMessage(context, message);
+        // Redirection vers une page d'accueil par exemple
+        context.push('/forgot-password');
       } else {
         String message = "Erreur: ${response.statusCode}";
         message = data["errors"]["message"];

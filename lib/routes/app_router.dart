@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:go_router/go_router.dart';
 import 'package:id_app/presentation/screens/auth/forgot_password_screen.dart';
+import 'package:id_app/presentation/screens/auth/request_password_reset_code.dart';
 import 'package:id_app/presentation/screens/history_screen.dart';
 import 'package:id_app/presentation/screens/home_screen.dart';
 import 'package:id_app/presentation/screens/auth/login_screen.dart';
@@ -26,14 +27,18 @@ final GoRouter router = GoRouter(
       path: '/welcome',
       builder: (context, state) => const WelcomeScreen(),
     ),
-    GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
+    GoRoute(path: '/login', builder: (context, state) => LoginScreen()),
+    GoRoute(
+      path: '/request-reset-password-link',
+      builder: (context, state) => RequestCodeScreen(),
+    ),
     GoRoute(
       path: '/forgot-password',
       builder: (context, state) => const ForgotPasswordScreen(),
     ),
     GoRoute(
       path: '/register',
-      builder: (context, state) => const SignupScreen(),
+      builder: (context, state) => SignupScreen(),
     ),
     GoRoute(
       path: '/reset-password',

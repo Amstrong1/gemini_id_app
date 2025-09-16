@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:id_app/app_config.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -12,23 +14,10 @@ class ForgotPasswordScreen extends StatefulWidget {
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   String _otpCode = '';
-  int _timer = 40;
 
   @override
   void initState() {
     super.initState();
-    _startCountdown();
-  }
-
-  void _startCountdown() {
-    Future.doWhile(() async {
-      await Future.delayed(const Duration(seconds: 1));
-      if (_timer > 0) {
-        setState(() => _timer--);
-        return true;
-      }
-      return false;
-    });
   }
 
   @override
@@ -72,7 +61,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                     const SizedBox(height: 20),
                     const Text(
-                      'Veuillez entrer le code de sécurité à 4 chiffres qui a été envoyé sur le mail\nlo******@gmail.com',
+                      'Veuillez entrer le code de sécurité à 4 chiffres qui a été envoyé sur votre adresse e-mail.',
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 16),
                     ),
@@ -94,18 +83,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    Text(
-                      'Renvoyer dans $_timer Sec',
-                      style: TextStyle(color: Colors.grey[700]),
-                    ),
+                    // Text(
+                    //   'Renvoyer dans $_timer Sec',
+                    //   style: TextStyle(color: Colors.grey[700]),
+                    // ),
                     const SizedBox(height: 60),
                     SizedBox(
                       width: 200,
                       height: 50,
                       child: ElevatedButton(
-                        onPressed: () {
+                        onPressed: () async {
                           // handle OTP submission
-                          print('OTP entered: $_otpCode');
+                          SharedPreferences prefs = await SharedPreferences.getInstance();
+                          await prefs.setString('otpCode', _otpCode);
                           if (_otpCode.length == 4) {
                             // Navigate to the next screen or perform verification
                             context.push('/reset-password');
@@ -120,7 +110,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                           }
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF23A4C9),
+                          backgroundColor: AppConfig.primaryColor,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),

@@ -1,9 +1,26 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:http/http.dart' as http;
+import 'package:id_app/app_config.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class SignupScreen extends StatelessWidget {
-  const SignupScreen({super.key});
+class SignupScreen extends StatefulWidget {
+  SignupScreen({super.key});
 
+  final TextEditingController fullnameController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
+  @override
+  State<SignupScreen> createState() => _LoginButtonState();
+}
+
+class _LoginButtonState extends State<SignupScreen> {
+  bool isLoading = false;
   @override
   Widget build(BuildContext context) {
     final inputDecoration = InputDecoration(
@@ -77,6 +94,7 @@ class SignupScreen extends StatelessWidget {
                         hintText: 'Nom Complet',
                         prefixIcon: const Icon(Icons.person_outline),
                       ),
+                      controller: widget.fullnameController,
                     ),
                     const SizedBox(height: 16),
 
@@ -86,6 +104,7 @@ class SignupScreen extends StatelessWidget {
                         hintText: 'Email',
                         prefixIcon: const Icon(Icons.email_outlined),
                       ),
+                      controller: widget.emailController,
                     ),
                     const SizedBox(height: 16),
 
@@ -95,6 +114,8 @@ class SignupScreen extends StatelessWidget {
                         hintText: 'N° Téléphone',
                         prefixIcon: const Icon(Icons.phone_outlined),
                       ),
+                      keyboardType: TextInputType.phone,
+                      controller: widget.phoneController, // Placeholder
                     ),
                     const SizedBox(height: 16),
 
@@ -105,6 +126,7 @@ class SignupScreen extends StatelessWidget {
                         hintText: 'Mot de passe',
                         prefixIcon: const Icon(Icons.lock_outline),
                       ),
+                      controller: widget.passwordController,
                     ),
                     const SizedBox(height: 16),
 
@@ -115,6 +137,7 @@ class SignupScreen extends StatelessWidget {
                         hintText: 'Confirmation de mot de passe',
                         prefixIcon: const Icon(Icons.lock_outline),
                       ),
+                      controller: widget.confirmPasswordController,
                     ),
 
                     const SizedBox(height: 30),
@@ -125,21 +148,29 @@ class SignupScreen extends StatelessWidget {
                       height: 50,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(
-                            0xFF23A4C9,
-                          ), // Blue color
+                          backgroundColor: AppConfig.primaryColor,
+                          // Blue color
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(14),
                           ),
                         ),
                         onPressed: () {
-                          // TODO: Add registration logic
+                          registerUser(
+                            context: context,
+                            fullname: widget.fullnameController.text.trim(),
+                            email: widget.emailController.text.trim(),
+                            password: widget.passwordController.text.trim(),
+                            passwordConfirmation: widget
+                                .confirmPasswordController
+                                .text
+                                .trim(),
+                          );
                         },
-                        child: const Row(
+                        child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Text(
-                              'S’inscrire',
+                              isLoading ? 'Chargement...' : 'S’inscrire',
                               style: TextStyle(
                                 fontSize: 18,
                                 color: Colors.white,
@@ -166,11 +197,11 @@ class SignupScreen extends StatelessWidget {
                           const Text("Vous avez déjà un compte? "),
                           GestureDetector(
                             onTap: () {
-                              context.push('/login');
+                              context.go('/login');
                             },
-                            child: const Text(
+                            child: Text(
                               "Se connecter",
-                              style: TextStyle(color: Color(0xFF23A4C9)),
+                              style: TextStyle(color: AppConfig.primaryColor),
                             ),
                           ),
                         ],
@@ -186,5 +217,73 @@ class SignupScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  void registerUser({
+    required BuildContext context,
+    required String fullname,
+    required String email,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    // Handle registration logic here
+
+    setState(() {
+      isLoading = true;
+    });
+
+    if (email.isEmpty ||
+        password.isEmpty ||
+        fullname.isEmpty ||
+        passwordConfirmation.isEmpty) {
+      _showMessage(context, "Veuillez remplir tous les champs.");
+      setState(() {
+        isLoading = false;
+      });
+      return;
+    }
+    String apiUrl = "${AppConfig.baseUrl}auth/register";
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "fullname": fullname,
+          "email": email,
+          "password": password,
+          "password_confirmation": passwordConfirmation,
+        }),
+      );
+
+      final data = jsonDecode(response.body);
+      if (response.statusCode == 200) {
+        if (data["data"]["token"] != null && data["data"]["user"] != null) {
+          // Sauvegarde dans SharedPreferences
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          await prefs.setString("token", data["data"]["token"]);
+          await prefs.setString("user", data["data"]["user"].toString());
+
+          // Redirection vers une page d'accueil par exemple
+          context.go('/home');
+        } else {
+          _showMessage(context, "Réponse invalide du serveur.");
+        }
+      } else {
+        String message = "Erreur: ${response.statusCode}";
+        message = data["errors"]["message"];
+
+        _showMessage(context, message);
+      }
+    } catch (e) {
+      _showMessage(context, "Exception: $e");
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  void _showMessage(BuildContext context, String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 }

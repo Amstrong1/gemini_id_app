@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:id_app/app_config.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -32,7 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFF23A4C9), Color(0xFF23A4C9)],
+                  colors: [AppConfig.primaryColor, AppConfig.primaryColor,],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),

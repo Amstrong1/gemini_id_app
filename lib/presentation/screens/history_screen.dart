@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:id_app/app_config.dart';
 
 class VerificationHistoryScreen extends StatefulWidget {
   const VerificationHistoryScreen({super.key});
@@ -68,15 +69,15 @@ class _VerificationHistoryScreenState extends State<VerificationHistoryScreen> {
             },
           ),
           bottom: TabBar(
-            indicatorColor: Color(0xFF23A4C9),
+            indicatorColor: AppConfig.primaryColor,
             labelColor: Colors.white,
             unselectedLabelColor: Colors.grey,
             labelStyle: TextStyle(fontWeight: FontWeight.bold),
             unselectedLabelStyle: TextStyle(fontWeight: FontWeight.normal),
             indicator: BoxDecoration(
-              color: Color(0xFF23A4C9),
+              color: AppConfig.primaryColor,
               borderRadius: BorderRadius.circular(50),
-              border: Border.all(color: Color(0xFF23A4C9)),
+              border: Border.all(color: AppConfig.primaryColor,),
             ),
             indicatorSize: TabBarIndicatorSize.tab,
             indicatorPadding: const EdgeInsets.symmetric(horizontal: 16.0),

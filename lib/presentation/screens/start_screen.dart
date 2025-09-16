@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
+
+  Future<bool> isLoggedIn() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString("user") != null; // true si "user" existe
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,8 +73,14 @@ class WelcomeScreen extends StatelessWidget {
                   SizedBox(
                     width: 150,
                     child: ElevatedButton(
-                      onPressed: () {
-                        context.push('/login');
+                      onPressed: () async {
+                        final loggedIn = await isLoggedIn();
+                        if (!context.mounted) return;
+                        if (loggedIn) {
+                          context.go('/home');
+                        } else {
+                          context.go('/login');
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color(0xFF00A9E0), // blue color

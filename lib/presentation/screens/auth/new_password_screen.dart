@@ -1,5 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:http/http.dart' as http;
+import 'package:id_app/app_config.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class NewPasswordScreen extends StatefulWidget {
   const NewPasswordScreen({super.key});
@@ -10,23 +15,87 @@ class NewPasswordScreen extends StatefulWidget {
 
 class _NewPasswordScreenState extends State<NewPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmController = TextEditingController();
 
   bool _obscurePassword = true;
   bool _obscureConfirm = true;
 
-  void _submit() {
+  bool isLoading = false;
+
+  void _submit({
+    required BuildContext context,
+    required String email,
+    required String newPassword,
+    required String confirmPassword,
+  }) async {
+    setState(() {
+      isLoading = true;
+    });
+
     if (_formKey.currentState!.validate()) {
       // Passwords are valid
-      final newPassword = _passwordController.text;
-      print('Password saved: $newPassword');
-      // Handle password update logic
+      if (newPassword != confirmPassword) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Les mots de passe ne correspondent pas'),
+          ),
+        );
+        setState(() {
+          isLoading = false;
+        });
+        return;
+      }
+
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      final otpCode = prefs.getString('otpCode') ?? '';
+
+      // Proceed with password update logic here
+      String apiUrl = "${AppConfig.baseUrl}auth/login";
+      try {
+        final response = await http.post(
+          Uri.parse(apiUrl),
+          headers: {"Content-Type": "application/json"},
+          body: jsonEncode({
+            "code": otpCode,
+            "email": email,
+            "password": newPassword,
+            "password_confirmation": confirmPassword,
+          }),
+        );
+
+        final data = jsonDecode(response.body);
+
+        if (response.statusCode == 200) {
+          _showMessage(
+            context,
+            "Mot de passe mis à jour avec succès. Veuillez vous reconnecter.",
+          );
+        } else {
+          String message = "Erreur: ${response.statusCode}";
+          message = data["errors"]["message"];
+
+          _showMessage(context, message);
+        }
+      } catch (e) {
+        _showMessage(context, "Exception: $e");
+      } finally {
+        setState(() {
+          isLoading = false;
+        });
+      }
     }
+
+    // Handle password update logic
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Mot de passe mis à jour avec succès')),
+    );
   }
 
   @override
   void dispose() {
+    _emailController.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
     super.dispose();
@@ -65,6 +134,15 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
                         children: [
                           Center(
                             child: Text(
+                              'Email',
+                              style: theme.textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Center(
+                            child: Text(
                               'Nouveau mot de passe',
                               style: theme.textTheme.headlineSmall?.copyWith(
                                 fontWeight: FontWeight.bold,
@@ -79,6 +157,10 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
                             ),
                           ),
                           const SizedBox(height: 32),
+
+                          /// Email
+                          _buildEmailField(controller: _emailController),
+                          const SizedBox(height: 16),
 
                           /// New password
                           _buildPasswordField(
@@ -115,13 +197,18 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
                             height: 50,
                             child: ElevatedButton(
                               onPressed: () {
-                                _submit();
+                                _submit(
+                                  context: context,
+                                  email: _emailController.text.trim(),
+                                  newPassword: _passwordController.text,
+                                  confirmPassword: _confirmController.text,
+                                );
                                 context.go(
                                   '/login',
                                 ); // Navigate to login after submission
                               },
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF23A4C9),
+                                backgroundColor: AppConfig.primaryColor,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -198,4 +285,35 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
       ),
     );
   }
+
+  Widget _buildEmailField({required TextEditingController controller}) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: TextInputType.emailAddress,
+      validator: (value) {
+        if (value == null || value.isEmpty) {
+          return 'Veuillez entrer votre email';
+        }
+        final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
+        if (!emailRegex.hasMatch(value)) {
+          return 'Veuillez entrer un email valide';
+        }
+        return null;
+      },
+      decoration: InputDecoration(
+        labelText: 'Email',
+        prefixIcon: const Icon(Icons.email),
+        filled: true,
+        fillColor: Colors.grey[100],
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+      ),
+    );
+  }
+}
+
+void _showMessage(BuildContext context, String msg) {
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
 }
