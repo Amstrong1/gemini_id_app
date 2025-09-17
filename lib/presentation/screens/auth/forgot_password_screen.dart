@@ -61,22 +61,22 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     ),
                     const SizedBox(height: 20),
                     const Text(
-                      'Veuillez entrer le code de sécurité à 4 chiffres qui a été envoyé sur votre adresse e-mail.',
+                      'Veuillez entrer le code de sécurité à 6 chiffres qui a été envoyé à votre adresse e-mail.',
                       textAlign: TextAlign.center,
                       style: TextStyle(fontSize: 16),
                     ),
                     const SizedBox(height: 24),
                     PinCodeTextField(
                       appContext: context,
-                      length: 4,
+                      length: 6,
                       onChanged: (value) => _otpCode = value,
                       animationType: AnimationType.scale,
                       keyboardType: TextInputType.number,
                       pinTheme: PinTheme(
                         shape: PinCodeFieldShape.box,
                         borderRadius: BorderRadius.circular(12),
-                        fieldHeight: 60,
-                        fieldWidth: 60,
+                        fieldHeight: 50,
+                        fieldWidth: 50,
                         inactiveColor: Colors.grey.shade300,
                         activeColor: Colors.blue,
                         selectedColor: Colors.blueAccent,
@@ -94,9 +94,10 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       child: ElevatedButton(
                         onPressed: () async {
                           // handle OTP submission
-                          SharedPreferences prefs = await SharedPreferences.getInstance();
+                          SharedPreferences prefs =
+                              await SharedPreferences.getInstance();
                           await prefs.setString('otpCode', _otpCode);
-                          if (_otpCode.length == 4) {
+                          if (_otpCode.length == 6) {
                             // Navigate to the next screen or perform verification
                             context.push('/reset-password');
                           } else {

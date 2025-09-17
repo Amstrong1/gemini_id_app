@@ -52,7 +52,7 @@ class _NewPasswordScreenState extends State<NewPasswordScreen> {
       final otpCode = prefs.getString('otpCode') ?? '';
 
       // Proceed with password update logic here
-      String apiUrl = "${AppConfig.baseUrl}auth/login";
+      String apiUrl = "${AppConfig.baseUrl}auth/reset-password";
       try {
         final response = await http.post(
           Uri.parse(apiUrl),
