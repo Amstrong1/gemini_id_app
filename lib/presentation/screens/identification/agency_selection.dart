@@ -12,11 +12,11 @@ class _AgencySelectionScreenState extends State<AgencySelectionScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   final List<String> agencies = [
-    'Société d’Identification',
-    'Société de référence technologique',
-    'Société d’Identification',
-    'Société d’Identification',
-    'Société d’Identification',
+    "Société d'Identification",
+    "Société de référence technologique",
+    "Société d'Identification",
+    "Société d'Identification",
+    "Société d'Identification",
   ];
 
   int? selectedIndex = 0;
@@ -69,7 +69,7 @@ class _AgencySelectionScreenState extends State<AgencySelectionScreen> {
               Image.asset('assets/images/logo.png', height: 40),
               const SizedBox(width: 12),
               const Text(
-                "Je M’identifie",
+                "Je M'identifie",
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
@@ -80,7 +80,7 @@ class _AgencySelectionScreenState extends State<AgencySelectionScreen> {
           ),
           const SizedBox(height: 8),
           const Text(
-            "Choisissez l’agence avec laquelle vous souhaitez faire la vérification",
+            "Choisissez l'agence avec laquelle vous souhaitez faire la vérification",
             textAlign: TextAlign.center,
             style: TextStyle(color: Colors.white, fontSize: 14),
           ),
@@ -108,7 +108,7 @@ class _AgencySelectionScreenState extends State<AgencySelectionScreen> {
       child: TextField(
         controller: _searchController,
         decoration: const InputDecoration(
-          hintText: "Rechercher le nom de l’agence",
+          hintText: "Rechercher le nom de l'agence",
           border: InputBorder.none,
           icon: Icon(Icons.search),
         ),

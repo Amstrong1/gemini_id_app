@@ -59,7 +59,7 @@ class _UploadDocumentScreenState extends State<UploadDocumentScreen> {
                         Image.asset('assets/images/logo.png', height: 60),
                         const SizedBox(width: 8),
                         const Text(
-                          "Je M’identifie",
+                          "Je M'identifie",
                           style: TextStyle(
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
