@@ -13,6 +13,7 @@ import 'package:id_app/presentation/screens/identification/agency_verification_s
 import 'package:id_app/presentation/screens/identification/tracking_code.dart';
 import 'package:id_app/presentation/screens/identification/upload_doc.dart';
 import 'package:id_app/presentation/screens/identification/verification_method.dart';
+import 'package:id_app/presentation/screens/identification/video_call_screen.dart';
 import 'package:id_app/presentation/screens/splash_screen.dart';
 import 'package:id_app/presentation/screens/start_screen.dart';
 
@@ -36,10 +37,7 @@ final GoRouter router = GoRouter(
       path: '/forgot-password',
       builder: (context, state) => const ForgotPasswordScreen(),
     ),
-    GoRoute(
-      path: '/register',
-      builder: (context, state) => SignupScreen(),
-    ),
+    GoRoute(path: '/register', builder: (context, state) => SignupScreen()),
     GoRoute(
       path: '/reset-password',
       builder: (context, state) => const NewPasswordScreen(),
@@ -57,6 +55,11 @@ final GoRouter router = GoRouter(
       path: '/verification-method',
       builder: (context, state) =>
           VerificationMethodScreen(selfCallerId: selfCallerID),
+    ),
+    GoRoute(
+      path: '/video-screen',
+      builder: (context, state) =>
+          CallScreen(callerId: selfCallerID, calleeId: ''),
     ),
     GoRoute(
       path: '/upload-doc',

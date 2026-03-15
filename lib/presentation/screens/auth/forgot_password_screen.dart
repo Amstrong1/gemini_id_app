@@ -4,6 +4,9 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:id_app/app_config.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -14,6 +17,7 @@ class ForgotPasswordScreen extends StatefulWidget {
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   String _otpCode = '';
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -147,4 +151,58 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       ),
     );
   }
+
+  void requestCodeUser({
+    required BuildContext context,
+    required String email,
+  }) async {
+    // Handle registration logic here
+
+    setState(() {
+      isLoading = true;
+    });
+
+    if (email.isEmpty) {
+      _showMessage(context, "Veuillez remplir tous les champs.");
+      setState(() {
+        isLoading = false;
+      });
+      return;
+    }
+
+    String apiUrl = "${AppConfig.baseUrl}auth/forgot-password";
+
+    try {
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({"email": email}),
+      );
+
+      final data = jsonDecode(response.body);
+
+      if (response.statusCode == 200) {
+        String message = data["data"]["message"];
+
+        _showMessage(context, message);
+        // Redirection vers une page d'accueil par exemple
+        context.push('/forgot-password');
+      } else {
+        String message = "Erreur: ${response.statusCode}";
+        message = data["errors"]["message"];
+
+        _showMessage(context, message);
+      }
+    } catch (e) {
+      _showMessage(context, "Exception: $e");
+    } finally {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+}
+
+void _showMessage(BuildContext context, String msg) {
+  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
 }

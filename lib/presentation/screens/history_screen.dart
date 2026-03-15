@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:id_app/app_config.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class VerificationHistoryScreen extends StatefulWidget {
   const VerificationHistoryScreen({super.key});
@@ -11,44 +13,45 @@ class VerificationHistoryScreen extends StatefulWidget {
 }
 
 class _VerificationHistoryScreenState extends State<VerificationHistoryScreen> {
-  String selectedTab = 'Terminés'; // "En attente" or "Terminés"
+  String selectedTab = 'Terminés';
   final TextEditingController _searchController = TextEditingController();
+
+  late Future<List<Map<String, dynamic>>> historyFuture;
+
+  Future<List<Map<String, dynamic>>> getHistory() async {
+    final url = Uri.parse("${AppConfig.baseUrl}customer/kycs");
+
+    final token = await AppConfig.getToken();
+
+    try {
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        final List<dynamic> items = data['data']['items'];
+        return items.map((item) => item as Map<String, dynamic>).toList();
+      } else {
+        throw Exception("Failed to load history");
+      }
+    } catch (e) {
+      throw Exception("Failed to load history: $e");
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    historyFuture = getHistory();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final List<Map<String, dynamic>> historyItems = [
-      {
-        'name': 'Société d’Identification',
-        'date': 'Le 12/05/2025 à 12h',
-        'method': 'Vidéo-Identification',
-        'code': '52DF8KD',
-        'status': 'Succès',
-      },
-      {
-        'name': 'Société d’Identification',
-        'date': 'Le 12/05/2025 à 12h',
-        'method': 'Vidéo-Identification',
-        'code': '52DF8KD',
-        'status': 'Échec',
-      },
-    ];
-    final List<Map<String, dynamic>> waitingItems = [
-      {
-        'name': 'Société d’Identification',
-        'date': 'Le 12/05/2025 à 12h',
-        'method': 'Vidéo-Identification',
-        'code': '52DF8KD',
-        'status': 'Rappeler',
-      },
-      {
-        'name': 'Société d’Identification',
-        'date': 'Le 12/05/2025 à 12h',
-        'method': 'Vidéo-Identification',
-        'code': '52DF8KD',
-        'status': 'Rappeler',
-      },
-    ];
-
     return DefaultTabController(
       length: 2, // nombre d'onglets
       child: Scaffold(
@@ -77,7 +80,7 @@ class _VerificationHistoryScreenState extends State<VerificationHistoryScreen> {
             indicator: BoxDecoration(
               color: AppConfig.primaryColor,
               borderRadius: BorderRadius.circular(50),
-              border: Border.all(color: AppConfig.primaryColor,),
+              border: Border.all(color: AppConfig.primaryColor),
             ),
             indicatorSize: TabBarIndicatorSize.tab,
             indicatorPadding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -99,14 +102,36 @@ class _VerificationHistoryScreenState extends State<VerificationHistoryScreen> {
                   _buildSearchBar(),
                   const SizedBox(height: 20),
 
-                  // History List
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    itemCount: waitingItems.length,
-                    itemBuilder: (context, index) {
-                      final item = waitingItems[index];
-                      return _buildHistoryCard(item);
+                  FutureBuilder(
+                    future: historyFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      if (snapshot.hasError) {
+                        return Center(
+                          child: Text("Erreur : ${snapshot.error}"),
+                        );
+                      }
+                      if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return const Center(
+                          child: Text("Aucune entreprise trouvée"),
+                        );
+                      }
+                      final items = snapshot.data!;
+                      final waitingItems = items
+                          .where((item) => item['status'] == 'En attente')
+                          .toList();
+
+                      return ListView.builder(
+                        shrinkWrap: true,
+                        physics: NeverScrollableScrollPhysics(),
+                        itemCount: waitingItems.length,
+                        itemBuilder: (context, index) {
+                          final item = waitingItems[index];
+                          return _buildHistoryCard(item);
+                        },
+                      );
                     },
                   ),
                 ],
@@ -123,13 +148,34 @@ class _VerificationHistoryScreenState extends State<VerificationHistoryScreen> {
                   const SizedBox(height: 20),
 
                   // History List
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    itemCount: historyItems.length,
-                    itemBuilder: (context, index) {
-                      final item = historyItems[index];
-                      return _buildHistoryCard(item);
+                  FutureBuilder<List<Map<String, dynamic>>>(
+                    future: historyFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return const Center(child: CircularProgressIndicator());
+                      } else if (snapshot.hasError) {
+                        return Center(
+                          child: Text("Erreur : ${snapshot.error}"),
+                        );
+                      } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return const Center(
+                          child: Text("Aucune entreprise trouvée"),
+                        );
+                      } else {
+                        final items = snapshot.data!;
+                        final historyItems = items
+                            .where((item) => item['status'] == 'Terminé')
+                            .toList();
+                        return ListView.builder(
+                          shrinkWrap: true,
+                          physics: NeverScrollableScrollPhysics(),
+                          itemCount: historyItems.length,
+                          itemBuilder: (context, index) {
+                            final item = historyItems[index];
+                            return _buildHistoryCard(item);
+                          },
+                        );
+                      }
                     },
                   ),
                 ],
